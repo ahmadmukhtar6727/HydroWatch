@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HydroWatch - Operations & Revenue Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7f9;
+        }
+        .revenue-card {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        /* Style for interactive star feedback */
+        .star-select {
+            color: #fb8c00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark shadow mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">💧 HydroWatch Ops</a>
+            <a href="/" class="btn btn-outline-light btn-sm">⬅️ Back to Main Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 revenue-card h-100">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+                        <div>
+                            <h6 class="text-uppercase text-white-50 small fw-bold">Total Platform Revenue</h6>
+                            <h1 class="display-5 fw-bold mb-3">₦{{ total_platform_profit|floatformat:2 }}</h1>
+                        </div>
+                        <span class="badge bg-success p-2 w-50 fw-bold">Live Monetization</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 border-top border-primary border-4 h-100">
+                    <div class="card-body p-4">
+                        <h6 class="text-uppercase text-muted small fw-bold">Community Service Fees</h6>
+                        <h2 class="fw-bold text-primary mt-2">₦{{ community_earnings|floatformat:2 }}</h2>
+                        <p class="text-muted small mb-0">Earned from processing digital repair levies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 border-top border-success border-4 h-100">
+                    <div class="card-body p-4">
+                        <h6 class="text-uppercase text-muted small fw-bold">Technician Commissions</h6>
+                        <h2 class="fw-bold text-success mt-2">₦{{ technician_earnings|floatformat:2 }}</h2>
+                        <p class="text-muted small mb-0">Retained platform cut from completed job matching.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-danger mb-4">📢 Incoming Faults (Assign Tech & Log Quote)</h5>
+                        {% for fault in pending_faults %}
+                        <div class="border rounded p-3 mb-3 bg-light">
+                            <span class="badge bg-warning text-dark mb-2">Urgency: {{ fault.urgency }}</span>
+                            <h6><strong>Asset:</strong> {{ fault.water_point.point_id }} ({{ fault.water_point.location_name }})</h6>
+                            <p class="text-muted small mb-3">"{{ fault.issue_description }}"</p>
+                            
+                            <form method="POST" action="{% url 'assign_job' fault.id %}">
+                                {% csrf_token %}
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <select class="form-select form-select-sm" name="technician_id" required>
+                                            <option value="" selected disabled>Select Technician</option>
+                                            {% for tech in technicians %}
+                                            <option value="{{ tech.id }}">
+                                                {{ tech.name }} — 
+                                                {% if tech.rating >= 4.5 %} ⭐⭐⭐⭐⭐ 
+                                                {% elif tech.rating >= 3.5 %} ⭐⭐⭐⭐☆ 
+                                                {% else %} ⭐⭐⭐☆☆ {% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" step="0.01" class="form-control form-select-sm form-control-sm" name="quoted_cost" placeholder="Total Cost (₦)" required>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold">Dispatch Job & Lock Commissions</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center py-4">No pending issues reported. Everything is clear!</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-primary mb-4">🛠️ Active Maintenance & Escrow Hold</h5>
+                        {% for job in active_jobs %}
+                        <div class="border rounded p-3 mb-3 bg-white border-start border-primary border-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6><strong>{{ job.water_point.point_id }}</strong></h6>
+                                <span class="badge bg-primary">In Progress</span>
+                            </div>
+                            <p class="text-muted small mb-1"><strong>Assigned To:</strong> {{ job.assigned_technician.name }}</p>
+                            <p class="text-dark small mb-3"><strong>Total Contract Value:</strong> ₦{{ job.quoted_cost|floatformat:2 }}</p>
+                            
+                            <form method="POST" action="{% url 'resolve_job' job.report.id|default:job.id %}" class="bg-light p-2 rounded mb-2 border">
+                                {% csrf_token %}
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <label class="small fw-bold text-muted mb-0">⭐ Rate Performance:</label>
+                                    <select class="form-select form-select-sm w-50 star-select" name="performance_rating" required>
+                                        <option value="5" selected>⭐⭐⭐⭐⭐ (Excellent Work)</option>
+                                        <option value="4">⭐⭐⭐⭐☆ (Good Job)</option>
+                                        <option value="3">⭐⭐⭐☆☆ (Satisfactory)</option>
+                                        <option value="2">⭐⭐☆☆☆ (Poor Service)</option>
+                                        <option value="1">⭐☆☆☆☆ (Terrible Work)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Confirm Repair & Release Funds</button>
+                            </form>
+
+                            <a href="{% url 'dispute_job' job.id %}" class="btn btn-outline-danger btn-sm w-100 fw-bold">⚠️ Report Repair Failure / Dispute</a>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center py-4">No active maintenance works out in the field right now.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 bg-white border-start border-danger border-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-danger mb-3">🚨 Escrow Hold & Arbitration Queue</h5>
+                        <p class="text-muted small">The following jobs were flagged as incomplete. Platform monetization cuts have been suspended until re-inspection.</p>
+                        {% for job in disputed_jobs %}
+                            <div class="alert alert-secondary d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Asset:</strong> {{ job.water_point.point_id }} | 
+                                    <strong>Technician Accused:</strong> {{ job.assigned_technician.name }} |
+                                    <strong>Value Held:</strong> ₦{{ job.quoted_cost|floatformat:2 }}
+                                </div>
+                                <span class="badge bg-danger">FUNDS FROZEN</span>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted small mb-0 text-center py-2">✨ Clear record. No active disputes under tracking.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
