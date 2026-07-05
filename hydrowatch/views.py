@@ -4,10 +4,10 @@ from django.db.models import Count, Sum, Avg
 from .models import WaterPoint, FaultReport, MaintenanceLog, Technician
 from django.utils import timezone
 from django.utils import timezone
+from django.db.models import Sum, Avg
 
 
 def home(request):
-    # Handle incoming fault reports from the community (Keep existing logic)
     if request.method == 'POST':
         point_id = request.POST.get('water_point_id')
         phone = request.POST.get('reporter_phone')
@@ -16,37 +16,51 @@ def home(request):
         
         try:
             selected_point = WaterPoint.objects.get(id=point_id)
+            
+            # 1. Determine status based on urgency
+            if urgency == 'HIGH':
+                new_status = 'BROKEN'
+            else:
+                # This covers LOW and MEDIUM urgency
+                new_status = 'MAINTENANCE'
+            
+            # Create the report
             FaultReport.objects.create(
                 water_point=selected_point,
                 reporter_phone=phone,
                 issue_description=description,
-                urgency=urgency
+                urgency=urgency,
+                status='PENDING'
             )
-            if urgency == 'HIGH':
-                selected_point.status = 'BROKEN'
-                selected_point.save()
             
-            messages.success(request, "Thank you! Your report has been submitted, and the dashboard has been updated.")
+            # Update WaterPoint status dynamically
+            selected_point.status = new_status
+            selected_point.save()
+            
+            messages.success(request, f"Report submitted. Asset status updated to {new_status}.")
             return redirect('home')
         except WaterPoint.DoesNotExist:
             messages.error(request, "Error: Selected water point does not exist.")
             return redirect('home')
 
-    # --- ADVANCED DATA ANALYTICS PIPELINE FOR JUDGES ---
+    # --- ANALYTICS PIPELINE ---
     total_assets = WaterPoint.objects.count()
-    broken_assets = WaterPoint.objects.filter(status='BROKEN').count()
-    resolved_repairs = FaultReport.objects.filter(is_resolved=True).count()
     
-    # Calculate financial metrics from the MaintenanceLogs
+    # Updated to reflect both BROKEN and MAINTENANCE as 'non-functional'
+    broken_assets = WaterPoint.objects.filter(status__in=['BROKEN', 'MAINTENANCE']).count()
+    
+    resolved_repairs = FaultReport.objects.filter(status='RESOLVED').count()
+    
+    # Financials
     financial_data = MaintenanceLog.objects.aggregate(
-        total_spent=Sum('cost_incurred'),
-        avg_cost=Avg('cost_incurred')
+        total_spent=Sum('report__quoted_cost'),
+        avg_cost=Avg('report__quoted_cost')
     )
     total_spent = financial_data['total_spent'] or 0.00
     avg_cost = financial_data['avg_cost'] or 0.00
 
-    # 🆕 ADD THIS: Calculate platform revenue generated for the homepage metrics
-    platform_revenue_stats = FaultReport.objects.filter(status='FIXED').aggregate(
+    # Platform Revenue
+    platform_revenue_stats = FaultReport.objects.filter(status='RESOLVED').aggregate(
         comm_fees=Sum('platform_fee_community'),
         tech_fees=Sum('platform_fee_technician')
     )
@@ -62,10 +76,9 @@ def home(request):
         'resolved_repairs': resolved_repairs,
         'total_spent': total_spent,
         'avg_cost': avg_cost,
-        'home_platform_profit': home_platform_profit, # 🆕 Passed to HTML
+        'home_platform_profit': home_platform_profit,
     }
     return render(request, 'hydrowatch/home.html', context)
-
 
 def technician_dashboard(request):
     # If the technician submits a repair log
@@ -158,6 +171,10 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from .models import MaintenanceLog, FaultReport, Technician
 
+from django.shortcuts import redirect
+from django.utils import timezone
+from .models import MaintenanceLog, FaultReport, Technician
+
 def resolve_job(request, fault_id):  
     if request.method == "POST":
         job = None
@@ -175,9 +192,9 @@ def resolve_job(request, fault_id):
                 except FaultReport.DoesNotExist:
                     pass
 
-        # 2. Process updates if the log is successfully caught
+        # 2. Process updates
         if job:
-            # Handle Technician stars calculation safely
+            # Handle Technician stars
             if job.technician_name:
                 try:
                     tech = Technician.objects.get(name=job.technician_name)
@@ -189,31 +206,37 @@ def resolve_job(request, fault_id):
                 except Technician.DoesNotExist:
                     pass
 
-            # Update the maintenance entry record details
+            # Update Log
+            job.status = 'RESOLVED'
             job.action_taken = "Resolved and approved via Operations Control"
             job.date_resolved = timezone.now()
-            
-            # Target both uppercase and lowercase status fields just in case
-            if hasattr(job, 'status'):
-                job.status = 'RESOLVED'
             job.save()
             
-            # Force status updates on the attached report profile
+            # Update Report
             if job.report:
                 job.report.status = 'RESOLVED'
                 if hasattr(job.report, 'is_resolved'):
                     job.report.is_resolved = True
                 job.report.save()
+
+                # --- CRITICAL FIX: SYNC WATERPOINT ---
+                # This ensures the asset status changes on the home dashboard
+                if job.report.water_point:
+                    job.report.water_point.status = 'FUNCTIONAL'
+                    job.report.water_point.save()
         
-        # 3. CRITICAL GLOBAL OVERRIDE: 
-        # Directly catch the target FaultReport by its primary key ID and force its status update.
-        # This fixes the main homepage dashboard if it loads via FaultReport rows!
+        # 3. GLOBAL OVERRIDE
         try:
             direct_report = FaultReport.objects.get(id=fault_id)
-            direct_report.status = 'RESOLVED'  # Sets standard status strings
+            direct_report.status = 'RESOLVED'
             if hasattr(direct_report, 'is_resolved'):
-                direct_report.is_resolved = True  # Sets boolean tracking columns if present
+                direct_report.is_resolved = True
             direct_report.save()
+            
+            # Also sync WaterPoint here just in case
+            if direct_report.water_point:
+                direct_report.water_point.status = 'FUNCTIONAL'
+                direct_report.water_point.save()
         except FaultReport.DoesNotExist:
             pass
             

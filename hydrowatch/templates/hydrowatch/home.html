@@ -6,20 +6,15 @@
     <title>HydroWatch - Community Water Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 🌊 LIGHT NAVY BLUE & CRISP OCEAN THEME BACKGROUND */
         body {
-            background-color: #f4f7fa; /* Ultra-Light Ice Navy */
-            color: #0f172a; /* Deep Navy Slate Text */
-            /* 💧 DARKER WATER DROP PATTERN (Increased fill-opacity from 0.03 to 0.12) */
+            background-color: #f4f7fa;
+            color: #0f172a;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%231d4ed8' fill-opacity='0.12'%3E%3Cpath d='M40 15 C40 15 25 32 25 42 C25 50 31 56 40 56 C49 56 55 50 55 42 C55 32 40 15 40 15 Z'/%3E%3C/g%3E%3C/svg%3E");
             background-attachment: fixed;
         }
-        
-        .status-functional { color: #1e3a8a; font-weight: bold; } /* Clear Deep Navy Greenish-Teal */
-        .status-maintenance { color: #b45309; font-weight: bold; } /* Warm Amber */
-        .status-broken { color: #be123c; font-weight: bold; } /* Deep Crimson */
-        
-        /* Premium Crisp Soft Glossy White Cards */
+        .status-functional { color: #1e3a8a; font-weight: bold; }   
+        .status-maintenance { color: #d97706; font-weight: bold; }  
+        .status-broken { color: #dc2626; font-weight: bold; }       
         .card {
             backdrop-filter: blur(8px);
             background-color: rgba(255, 255, 255, 0.95) !important;
@@ -27,32 +22,13 @@
             border: 1px solid #e2e8f0 !important;
             box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06) !important;
         }
-
-        /* Typography overrides for clean hierarchy */
-        .text-dark {
-            color: #1e3a8a !important; /* Rich Corporate Navy */
-        }
-        .text-muted {
-            color: #475569 !important; /* Muted Slate */
-        }
-        .table-hover tbody tr:hover {
-            background-color: #f1f5f9 !important;
-        }
-        .table {
-            color: #334155 !important;
-        }
-        .form-control, .form-select {
-            background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #2563eb !important;
-            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15) !important;
-        }
-        .form-control::placeholder {
-            color: #94a3b8 !important;
-        }
+        .text-dark { color: #1e3a8a !important; }
+        .text-muted { color: #475569 !important; }
+        .table-hover tbody tr:hover { background-color: #f1f5f9 !important; }
+        .table { color: #334155 !important; }
+        .form-control, .form-select { background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
+        .form-control:focus, .form-select:focus { border-color: #2563eb !important; box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15) !important; }
+        .form-control::placeholder { color: #94a3b8 !important; }
     </style>
 </head>
 <body>
@@ -66,28 +42,19 @@
     </nav>
 
     <div class="container my-5">
-        
-        <!-- UPGRADED PREMIUM HEADER BANNER -->
         <div class="row align-items-center mb-5 p-4 rounded shadow-sm position-relative overflow-hidden border-start border-5" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb !important;">
-            
-            <!-- Left Upper Hand: Nigeria Flag & Clean Water Design Graphic -->
             <div class="col-md-3 d-flex align-items-center gap-3 mb-3 mb-md-0">
-                <!-- CSS-rendered Nigerian Flag -->
                 <div class="shadow-sm d-flex" style="width: 60px; height: 40px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; flex-shrink: 0;">
                     <div style="background-color: #008751; width: 33.33%; height: 100%;"></div>
                     <div style="background-color: #ffffff; width: 33.34%; height: 100%;"></div>
                     <div style="background-color: #008751; width: 33.33%; height: 100%;"></div>
                 </div>
-                
-                <!-- Modern Graphic Decorative Water Droplets Line -->
                 <div class="d-flex gap-1 align-items-end" style="height: 40px;">
                     <span style="font-size: 1.2rem; color: #3b82f6; opacity: 0.4;">💧</span>
                     <span style="font-size: 1.6rem; color: #1d4ed8;">💧</span>
                     <span style="font-size: 1.2rem; color: #3b82f6; opacity: 0.4;">💧</span>
                 </div>
             </div>
-
-            <!-- Middle Side: Centered HydroWatch Brand Identity -->
             <div class="col-md-6 text-md-center mb-3 mb-md-0">
                 <h1 class="display-5 fw-bold mb-1 tracking-tight" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; letter-spacing: -1px;">
                     <span style="color: #1d4ed8;">Hydro</span><span style="color: #0f172a;">Watch</span>
@@ -96,14 +63,11 @@
                     Smart Community Water Monitoring & Maintenance System
                 </p>
             </div>
-
-            <!-- Right Side: Direct Link to Operations Problem Management -->
             <div class="col-md-3 text-end">
                 <a href="/ops/" class="btn btn-outline-primary btn-sm fw-bold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2" style="color: #1d4ed8; border-color: #1d4ed8;">
                     <span>🛠️</span> Manage Problems (Ops)
                 </a>
             </div>
-
         </div>
 
         {% if messages %}
@@ -115,7 +79,6 @@
             {% endfor %}
         {% endif %}
 
-        <!-- ANALYTICS INSIGHTS ROW -->
         <div class="row g-3 mb-5 text-center">
             <div class="col-6 col-md-4 col-lg-2 flex-fill">
                 <div class="card shadow-sm border-0 border-top border-4 h-100" style="border-top-color: #1d4ed8 !important;">
@@ -157,7 +120,6 @@
                     </div>
                 </div>
             </div>
-            <!-- INTEGRATED PLATFORM MONETIZATION PUBLIC WIDGET -->
             <div class="col-6 col-md-4 col-lg-2 flex-fill">
                 <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white !important;">
                     <div class="card-body px-2 py-3">
@@ -169,7 +131,6 @@
         </div>
 
         <div class="row g-4">
-            
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body p-4">
@@ -191,20 +152,24 @@
                                         <td class="fw-bold" style="color: #1d4ed8;">{{ point.point_id }}</td>
                                         <td>{{ point.location_name }}</td>
                                         <td>{{ point.lga }}</td>
-                                        <td>
-                                            {% if point.status == 'FUNCTIONAL' %}
-                                                <span class="status-functional">● Functional</span>
-                                            {% elif point.status == 'MAINTENANCE' %}
-                                                <span class="status-maintenance">● Needs Maintenance</span>
-                                            {% else %}
-                                                <span class="status-broken">● Broken Down</span>
-                                            {% endif %}
-                                        </td>
+
+					<td>
+    					    {% with status=point.status|stringformat:"s" %}
+        					{% if status.strip == 'FUNCTIONAL' %}
+            					    <span class="status-functional">● Functional</span>
+        				    	{% elif status.strip == 'MAINTENANCE' %}
+            					    <span class="status-maintenance">● Needs Maintenance</span>
+        				    	{% else %}
+            					    <span class="status-broken">● Broken Down</span>
+        				    	{% endif %}
+    				      	    {% endwith %}
+					</td>
+                                       
                                         <td class="text-muted" style="font-size: 0.9rem;">{{ point.last_inspected|date:"M d, Y H:i" }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">No water points registered in the system yet. Go to the Admin dashboard to add assets!</td>
+                                        <td colspan="5" class="text-center text-muted py-4">No water points registered in the system yet.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -220,10 +185,8 @@
                         <h5 class="card-title mb-3 fw-bold text-danger">⚠️ Report a Fault</h5>
                         <p class="text-muted small">Notice an issue with a community borehole? Submit it here to alert maintenance teams immediately.</p>
                         <hr style="border-top: 1px solid #e2e8f0;">
-                        
                         <form method="POST" action="">
                             {% csrf_token %}
-                            
                             <div class="mb-3">
                                 <label for="water_point_id" class="form-label fw-semibold">Select Water Facility</label>
                                 <select class="form-select" id="water_point_id" name="water_point_id" required>
@@ -233,12 +196,10 @@
                                     {% endfor %}
                                 </select>
                             </div>
-
                             <div class="mb-3">
                                 <label for="reporter_phone" class="form-label fw-semibold">Your Phone Number</label>
                                 <input type="tel" class="form-control" id="reporter_phone" name="reporter_phone" placeholder="e.g., 08012345678" required>
                             </div>
-
                             <div class="mb-3">
                                 <label for="urgency" class="form-label fw-semibold">Urgency Level</label>
                                 <select class="form-select" id="urgency" name="urgency" required>
@@ -247,22 +208,17 @@
                                     <option value="HIGH">High (Completely broken / No water flow)</option>
                                 </select>
                             </div>
-
                             <div class="mb-3">
                                 <label for="issue_description" class="form-label fw-semibold">Describe the Issue</label>
                                 <textarea class="form-control" id="issue_description" name="issue_description" rows="3" placeholder="Provide details about the breakdown..." required></textarea>
                             </div>
-
                             <button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">Submit Alert</button>
                         </form>
-
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -27,5 +27,5 @@ class FaultReportAdmin(admin.ModelAdmin):
 
 @admin.register(MaintenanceLog)
 class MaintenanceLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'report', 'technician_name', 'cost_incurred')
+    list_display = ('id', 'report', 'report__assigned_technician', 'report__quoted_cost', 'status', 'date_resolved')
     search_fields = ('technician_name', 'action_taken')

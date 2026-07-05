@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class WaterPoint(models.Model):
     STATUS_CHOICES = [
@@ -122,12 +124,24 @@ class FaultReport(models.Model):
 
 
 class MaintenanceLog(models.Model):
-    # Enclosed safely to look directly upward at unified FaultReport
-    report = models.OneToOneField(FaultReport, on_delete=models.CASCADE, related_name='maintenance_log')
-    technician_name = models.CharField(max_length=100)
-    action_taken = models.TextField()
-    date_resolved = models.DateTimeField(auto_now_add=True)
-    cost_incurred = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    report = models.OneToOneField('FaultReport', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, default='PENDING')
+    date_resolved = models.DateTimeField(null=True, blank=True)
 
-    def __str__(self):
-        return f"Fix for {self.report.water_point.point_id} by {self.technician_name}"
+    def save(self, *args, **kwargs):
+        # Every time we save a maintenance log, force the parent report status
+        if self.status == 'RESOLVED' and self.report:
+            self.report.status = 'RESOLVED'
+            self.report.save()
+        super().save(*args, **kwargs)
+
+@receiver(post_save, sender='hydrowatch.FaultReport')
+def update_water_point_status(sender, instance, **kwargs):
+    # If the report is resolved, set the WaterPoint to FUNCTIONAL
+    if instance.status == 'RESOLVED':
+        instance.water_point.status = 'FUNCTIONAL'
+        instance.water_point.save()
+    # If it's a new report (not resolved), set WaterPoint to MAINTENANCE/BROKEN
+    else:
+        instance.water_point.status = 'MAINTENANCE' # or 'BROKEN'
+        instance.water_point.save()
